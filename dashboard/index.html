@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NakaAnalytics - Nagpur Traffic Intelligence</title>
+    <meta name="description" content="AI-powered traffic police deployment optimization system for Nagpur city">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚔</text></svg>">
+</head>
+<body>
+    <div class="app">
+        <!-- Top Navigation Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <div class="brand">
+                    <div class="brand-icon"><i class="fas fa-shield-halved"></i></div>
+                    <div class="brand-text">
+                        <h1>NakaAnalytics</h1>
+                        <span>Nagpur City Traffic Intelligence</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="tab-nav" id="tab-nav">
+                <button class="tab-btn active" data-tab="live" id="tab-btn-live">
+                    <i class="fas fa-satellite-dish"></i>
+                    <span>Live Command</span>
+                    <div class="live-dot"></div>
+                </button>
+                <button class="tab-btn" data-tab="eda" id="tab-btn-eda">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>EDA Analytics</span>
+                </button>
+                <button class="tab-btn" data-tab="model" id="tab-btn-model">
+                    <i class="fas fa-brain"></i>
+                    <span>Model Insights</span>
+                </button>
+            </nav>
+            <div class="topbar-right">
+                <div class="status-pill" id="server-status">
+                    <span class="pulse-dot-sm"></span>
+                    <span id="status-text">Connecting...</span>
+                </div>
+                <div class="clock" id="live-clock">--:--:--</div>
+            </div>
+        </header>
+
+        <!-- ============== TAB 1: LIVE COMMAND CENTER ============== -->
+        <div class="tab-content active" id="tab-live">
+            <div class="live-layout">
+                <!-- Left Sidebar -->
+                <aside class="live-sidebar">
+                    <div class="glass-card">
+                        <div class="card-header"><i class="fas fa-filter"></i> Controls</div>
+                        <div class="filter-row">
+                            <label>Violation Type</label>
+                            <select id="filter-violation">
+                                <option value="all">All Types</option>
+                                <option value="DUI">🍺 DUI</option>
+                                <option value="Speeding">⚡ Speeding</option>
+                                <option value="No_Helmet">⛑️ No Helmet</option>
+                                <option value="Signal_Jump">🚦 Signal Jump</option>
+                                <option value="Overloading">📦 Overloading</option>
+                                <option value="Wrong_Way">↩️ Wrong Way</option>
+                            </select>
+                        </div>
+                        <div class="filter-row">
+                            <label>Time Window</label>
+                            <select id="filter-time">
+                                <option value="all">All Day</option>
+                                <option value="early_morning">Early Morning (0-7)</option>
+                                <option value="rush_morning">Morning Rush (7-10)</option>
+                                <option value="midday">Midday (10-17)</option>
+                                <option value="rush_evening">Evening Rush (17-20)</option>
+                                <option value="late_night">Night (20-24)</option>
+                            </select>
+                        </div>
+                        <button class="btn-glow" onclick="NakaApp.refreshRecommendations()">
+                            <i class="fas fa-rotate"></i> Refresh View
+                        </button>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="stats-row">
+                        <div class="mini-stat">
+                            <div class="mini-stat-icon"><i class="fas fa-location-dot"></i></div>
+                            <div>
+                                <span class="mini-stat-val" id="stat-nakas">0</span>
+                                <span class="mini-stat-label">Active Nakas</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="mini-stat-icon warn"><i class="fas fa-car-burst"></i></div>
+                            <div>
+                                <span class="mini-stat-val" id="stat-violations">0</span>
+                                <span class="mini-stat-label">Events Today</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendations List -->
+                    <div class="glass-card">
+                        <div class="card-header"><i class="fas fa-trophy"></i> Top Deployments</div>
+                        <div class="rec-scroll" id="recommendations-list"></div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="glass-card legend-card">
+                        <div class="card-header"><i class="fas fa-tags"></i> Legend</div>
+                        <div class="legend-grid">
+                            <span class="legend-chip" style="--chip-color:#ef4444">🍺 DUI</span>
+                            <span class="legend-chip" style="--chip-color:#f59e0b">⚡ Speed</span>
+                            <span class="legend-chip" style="--chip-color:#10b981">⛑️ Helmet</span>
+                            <span class="legend-chip" style="--chip-color:#3b82f6">🚦 Signal</span>
+                            <span class="legend-chip" style="--chip-color:#8b5cf6">📦 Overload</span>
+                            <span class="legend-chip" style="--chip-color:#ec4899">↩️ Wrong</span>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Map Area -->
+                <div class="map-area">
+                    <div class="map-toolbar">
+                        <h2><i class="fas fa-map-location-dot"></i> Live Map — Nagpur, Maharashtra</h2>
+                        <div class="map-actions">
+                            <button class="map-btn" onclick="NakaApp.toggleHeatmap()" id="btn-heatmap">
+                                <i class="fas fa-fire"></i> Heatmap
+                            </button>
+                            <button class="map-btn" onclick="NakaApp.centerMap()">
+                                <i class="fas fa-crosshairs"></i> Reset View
+                            </button>
+                        </div>
+                    </div>
+                    <div id="map"></div>
+                    <div class="map-coord-overlay">
+                        <i class="fas fa-location-arrow"></i>
+                        <span id="map-center">21.1458° N, 79.0882° E</span>
+                    </div>
+                </div>
+
+                <!-- Right: Live Feed -->
+                <aside class="live-feed-panel">
+                    <div class="card-header">
+                        <span class="pulse-dot-sm green"></span>
+                        <i class="fas fa-broadcast-tower"></i> Live Feed
+                        <span class="badge" id="feed-badge">0</span>
+                    </div>
+                    <div class="feed-scroll" id="live-feed-list"></div>
+                </aside>
+            </div>
+
+            <!-- Bottom Charts Strip -->
+            <div class="bottom-charts">
+                <div class="glass-card chart-mini">
+                    <div class="chart-title"><i class="fas fa-chart-line"></i> Hourly Trend</div>
+                    <canvas id="live-hourly-chart"></canvas>
+                </div>
+                <div class="glass-card chart-mini">
+                    <div class="chart-title"><i class="fas fa-chart-pie"></i> Violation Mix</div>
+                    <canvas id="live-violation-chart"></canvas>
+                </div>
+                <div class="glass-card chart-mini">
+                    <div class="chart-title"><i class="fas fa-chart-column"></i> Zone Activity</div>
+                    <canvas id="live-zone-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============== TAB 2: EDA ANALYTICS ============== -->
+        <div class="tab-content" id="tab-eda">
+            <div class="eda-page">
+                <!-- Summary Stat Cards -->
+                <div class="eda-summary-row" id="eda-summary-cards">
+                    <div class="eda-stat-card">
+                        <div class="eda-stat-icon"><i class="fas fa-database"></i></div>
+                        <div class="eda-stat-val" id="eda-total">—</div>
+                        <div class="eda-stat-label">Total Records</div>
+                    </div>
+                    <div class="eda-stat-card">
+                        <div class="eda-stat-icon green"><i class="fas fa-clock"></i></div>
+                        <div class="eda-stat-val" id="eda-peak-hour">—</div>
+                        <div class="eda-stat-label">Peak Hour</div>
+                    </div>
+                    <div class="eda-stat-card">
+                        <div class="eda-stat-icon orange"><i class="fas fa-calendar-day"></i></div>
+                        <div class="eda-stat-val" id="eda-peak-dow">—</div>
+                        <div class="eda-stat-label">Peak Day</div>
+                    </div>
+                    <div class="eda-stat-card">
+                        <div class="eda-stat-icon red"><i class="fas fa-umbrella"></i></div>
+                        <div class="eda-stat-val" id="eda-weather-top">—</div>
+                        <div class="eda-stat-label">Top Weather</div>
+                    </div>
+                    <div class="eda-stat-card">
+                        <div class="eda-stat-icon purple"><i class="fas fa-flag"></i></div>
+                        <div class="eda-stat-val" id="eda-holiday-count">—</div>
+                        <div class="eda-stat-label">Holiday Events</div>
+                    </div>
+                    <div class="eda-stat-card">
+                        <div class="eda-stat-icon cyan"><i class="fas fa-map-pin"></i></div>
+                        <div class="eda-stat-val" id="eda-geo">—</div>
+                        <div class="eda-stat-label">Geo Coverage</div>
+                    </div>
+                </div>
+
+                <!-- Chart Grid -->
+                <div class="eda-chart-grid">
+                    <div class="glass-card eda-chart-card wide">
+                        <div class="chart-title"><i class="fas fa-chart-area"></i> Hourly Violation Distribution</div>
+                        <canvas id="eda-hourly-chart"></canvas>
+                    </div>
+                    <div class="glass-card eda-chart-card">
+                        <div class="chart-title"><i class="fas fa-chart-pie"></i> Violation Type Breakdown</div>
+                        <canvas id="eda-violation-pie"></canvas>
+                    </div>
+                    <div class="glass-card eda-chart-card">
+                        <div class="chart-title"><i class="fas fa-chart-bar"></i> Day of Week Activity</div>
+                        <canvas id="eda-dow-chart"></canvas>
+                    </div>
+                    <div class="glass-card eda-chart-card">
+                        <div class="chart-title"><i class="fas fa-car"></i> Vehicle Class Distribution</div>
+                        <canvas id="eda-vehicle-chart"></canvas>
+                    </div>
+                    <div class="glass-card eda-chart-card">
+                        <div class="chart-title"><i class="fas fa-cloud-sun"></i> Weather vs Violations</div>
+                        <canvas id="eda-weather-chart"></canvas>
+                    </div>
+                    <div class="glass-card eda-chart-card wide">
+                        <div class="chart-title"><i class="fas fa-table-cells"></i> Violation × Hour Heatmap</div>
+                        <canvas id="eda-heatmap-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============== TAB 3: MODEL INSIGHTS ============== -->
+        <div class="tab-content" id="tab-model">
+            <div class="model-page">
+                <!-- Model Info Cards -->
+                <div class="model-info-row" id="model-info-cards">
+                    <div class="model-info-card">
+                        <div class="model-icon"><i class="fas fa-microchip"></i></div>
+                        <div class="model-info-text">
+                            <span class="model-info-label">Algorithm</span>
+                            <span class="model-info-val">XGBoost</span>
+                        </div>
+                    </div>
+                    <div class="model-info-card">
+                        <div class="model-icon green"><i class="fas fa-database"></i></div>
+                        <div class="model-info-text">
+                            <span class="model-info-label">Training Samples</span>
+                            <span class="model-info-val" id="model-n-records">—</span>
+                        </div>
+                    </div>
+                    <div class="model-info-card">
+                        <div class="model-icon orange"><i class="fas fa-layer-group"></i></div>
+                        <div class="model-info-text">
+                            <span class="model-info-label">Features</span>
+                            <span class="model-info-val" id="model-n-features">—</span>
+                        </div>
+                    </div>
+                    <div class="model-info-card">
+                        <div class="model-icon purple"><i class="fas fa-sitemap"></i></div>
+                        <div class="model-info-text">
+                            <span class="model-info-label">Classes</span>
+                            <span class="model-info-val" id="model-n-classes">—</span>
+                        </div>
+                    </div>
+                    <div class="model-info-card">
+                        <div class="model-icon cyan"><i class="fas fa-circle-nodes"></i></div>
+                        <div class="model-info-text">
+                            <span class="model-info-label">Clusters</span>
+                            <span class="model-info-val" id="model-n-clusters">—</span>
+                        </div>
+                    </div>
+                    <div class="model-info-card">
+                        <div class="model-icon red"><i class="fas fa-calendar-check"></i></div>
+                        <div class="model-info-text">
+                            <span class="model-info-label">Trained At</span>
+                            <span class="model-info-val" id="model-trained-at">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- XGBoost Params -->
+                <div class="model-params-row">
+                    <div class="glass-card model-params-card">
+                        <div class="chart-title"><i class="fas fa-sliders"></i> XGBoost Hyperparameters</div>
+                        <div class="params-grid" id="xgb-params">
+                            <div class="param-item"><span class="param-key">max_depth</span><span class="param-val" id="p-depth">—</span></div>
+                            <div class="param-item"><span class="param-key">learning_rate</span><span class="param-val" id="p-lr">—</span></div>
+                            <div class="param-item"><span class="param-key">n_estimators</span><span class="param-val" id="p-nest">—</span></div>
+                            <div class="param-item"><span class="param-key">objective</span><span class="param-val" id="p-obj">—</span></div>
+                        </div>
+                    </div>
+                    <div class="glass-card model-params-card">
+                        <div class="chart-title"><i class="fas fa-tags"></i> Predicted Classes</div>
+                        <div class="classes-list" id="model-classes-list"></div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="model-chart-grid">
+                    <div class="glass-card model-chart-card wide">
+                        <div class="chart-title"><i class="fas fa-ranking-star"></i> Feature Importance (XGBoost)</div>
+                        <canvas id="model-fi-chart"></canvas>
+                    </div>
+                    <div class="glass-card model-chart-card">
+                        <div class="chart-title"><i class="fas fa-chart-pie"></i> Class Distribution</div>
+                        <canvas id="model-class-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
