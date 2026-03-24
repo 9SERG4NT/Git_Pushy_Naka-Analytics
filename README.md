@@ -427,5 +427,5 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for smarter, data-driven traffic law enforcement</sub>
+  <sub>Built with ❤️ for smarter, data-driven traffic law enforcement.</sub>
 </div>
