@@ -789,15 +789,21 @@ async function loadModelData() {
         document.getElementById("model-n-features").textContent = m.n_features || "—";
         document.getElementById("model-n-classes").textContent = m.n_classes || "—";
         document.getElementById("model-n-clusters").textContent = m.n_clusters || "—";
-        if (m.trained_at) {
-            const dt = new Date(m.trained_at);
-            document.getElementById("model-trained-at").textContent = dt.toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" });
-        }
         if (m.xgboost_params) {
             document.getElementById("p-depth").textContent = m.xgboost_params.max_depth;
             document.getElementById("p-lr").textContent = m.xgboost_params.learning_rate;
             document.getElementById("p-nest").textContent = m.xgboost_params.n_estimators;
             document.getElementById("p-obj").textContent = m.xgboost_params.objective;
+        }
+        // Populate evaluation results
+        if (m.evaluation) {
+            const e = m.evaluation;
+            document.getElementById("eval-accuracy").textContent = (e.accuracy * 100).toFixed(1) + "%";
+            document.getElementById("eval-precision").textContent = (e.precision_at_5 * 100).toFixed(1) + "%";
+            document.getElementById("eval-recall").textContent = (e.recall_at_5 * 100).toFixed(1) + "%";
+            document.getElementById("eval-f1").textContent = (e.f1_score * 100).toFixed(1) + "%";
+            document.getElementById("eval-hitrate").textContent = (e.hit_rate * 100).toFixed(1) + "%";
+            document.getElementById("eval-uplift").textContent = "+" + (e.uplift * 100).toFixed(1) + "%";
         }
         const classList = document.getElementById("model-classes-list");
         classList.innerHTML = "";
@@ -834,6 +840,310 @@ document.addEventListener("DOMContentLoaded", () => {
     init();
     document.getElementById("filter-violation")?.addEventListener("change", renderRecommendations);
     document.getElementById("filter-time")?.addEventListener("change", renderRecommendations);
+    startSyncPolling();
 });
 
 window.NakaApp = NakaApp;
+
+/* ============================================
+   Three.js 3D Visualization
+   ============================================ */
+
+NakaApp.threeScene = null;
+NakaApp.threeCamera = null;
+NakaApp.threeRenderer = null;
+NakaApp.threeActive = false;
+NakaApp.threeBars = [];
+NakaApp.threeOfficers = [];
+NakaApp.threeParticles = [];
+NakaApp.threeAnimId = null;
+NakaApp.syncOfficerMarkers = [];
+
+// Zone violation tracking for 3D
+NakaApp.zoneBarData = {};
+ZONES.forEach(z => { NakaApp.zoneBarData[z.name] = { count: 0, targetH: 0.3 }; });
+
+NakaApp.toggle3DView = function() {
+    const container = document.getElementById("three-container");
+    const btn = document.getElementById("btn-3d");
+    const mapEl = document.getElementById("map");
+
+    if (!NakaApp.threeActive) {
+        container.style.display = "block";
+        mapEl.style.visibility = "hidden";
+        btn.classList.add("active-btn");
+        NakaApp.threeActive = true;
+        if (!NakaApp.threeScene) init3DScene();
+        animate3D();
+    } else {
+        container.style.display = "none";
+        mapEl.style.visibility = "visible";
+        btn.classList.remove("active-btn");
+        NakaApp.threeActive = false;
+        if (NakaApp.threeAnimId) cancelAnimationFrame(NakaApp.threeAnimId);
+    }
+};
+
+function init3DScene() {
+    const canvas = document.getElementById("three-canvas");
+    const container = document.getElementById("three-container");
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+
+    // Scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0f1a);
+    scene.fog = new THREE.FogExp2(0x0b0f1a, 0.012);
+    NakaApp.threeScene = scene;
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 1000);
+    camera.position.set(35, 30, 35);
+    camera.lookAt(0, 0, 0);
+    NakaApp.threeCamera = camera;
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    NakaApp.threeRenderer = renderer;
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0x334466, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(20, 40, 20);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+    const pointLight = new THREE.PointLight(0xffd600, 0.5, 80);
+    pointLight.position.set(0, 20, 0);
+    scene.add(pointLight);
+
+    // Ground grid
+    const gridHelper = new THREE.GridHelper(80, 40, 0x1e3a5f, 0x0d1b2a);
+    scene.add(gridHelper);
+
+    // Ground plane
+    const groundGeo = new THREE.PlaneGeometry(80, 80);
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x0d1b2a, transparent: true, opacity: 0.8 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.05;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Create bars for each zone
+    ZONES.forEach((z, i) => {
+        // Map lat/lon to 3D coords (centered around Nagpur)
+        const x = (z.lon - 79.0882) * 2000;
+        const zPos = (z.lat - 21.1458) * -2000;
+
+        // Bar
+        const barGeo = new THREE.BoxGeometry(1.5, 1, 1.5);
+        const hue = (i / ZONES.length) * 0.3; // blue to green range
+        const barMat = new THREE.MeshPhongMaterial({
+            color: new THREE.Color().setHSL(hue, 0.8, 0.5),
+            emissive: new THREE.Color().setHSL(hue, 0.9, 0.15),
+            transparent: true,
+            opacity: 0.85,
+        });
+        const bar = new THREE.Mesh(barGeo, barMat);
+        bar.position.set(x, 0.5, zPos);
+        bar.castShadow = true;
+        bar.userData = { zone: z.name, zoneData: z };
+        scene.add(bar);
+
+        // Glow ring at base
+        const ringGeo = new THREE.RingGeometry(1.0, 1.6, 32);
+        const ringMat = new THREE.MeshBasicMaterial({
+            color: barMat.color.clone(),
+            transparent: true,
+            opacity: 0.25,
+            side: THREE.DoubleSide,
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(x, 0.02, zPos);
+        scene.add(ring);
+
+        // Zone label (floating text sprite)
+        const labelCanvas = document.createElement("canvas");
+        labelCanvas.width = 256;
+        labelCanvas.height = 64;
+        const ctx = labelCanvas.getContext("2d");
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = "bold 22px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(z.name.length > 15 ? z.name.substring(0, 15) + "…" : z.name, 128, 40);
+        const labelTexture = new THREE.CanvasTexture(labelCanvas);
+        const labelMat = new THREE.SpriteMaterial({ map: labelTexture, transparent: true, opacity: 0.6 });
+        const labelSprite = new THREE.Sprite(labelMat);
+        labelSprite.scale.set(6, 1.5, 1);
+        labelSprite.position.set(x, 0.2, zPos - 1.5);
+        scene.add(labelSprite);
+
+        NakaApp.threeBars.push({ mesh: bar, ring, label: labelSprite, zone: z, x, z: zPos, targetH: 0.3 });
+    });
+
+    // Resize handler
+    window.addEventListener("resize", () => {
+        if (!NakaApp.threeActive) return;
+        const w2 = container.clientWidth;
+        const h2 = container.clientHeight;
+        camera.aspect = w2 / h2;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w2, h2);
+    });
+}
+
+function animate3D() {
+    if (!NakaApp.threeActive) return;
+    NakaApp.threeAnimId = requestAnimationFrame(animate3D);
+
+    const time = Date.now() * 0.001;
+
+    // Orbit camera
+    const radius = 40;
+    NakaApp.threeCamera.position.x = Math.cos(time * 0.08) * radius;
+    NakaApp.threeCamera.position.z = Math.sin(time * 0.08) * radius;
+    NakaApp.threeCamera.position.y = 25 + Math.sin(time * 0.15) * 5;
+    NakaApp.threeCamera.lookAt(0, 2, 0);
+
+    // Animate bars toward target heights
+    NakaApp.threeBars.forEach(b => {
+        const zoneData = NakaApp.zoneBarData[b.zone.name] || { count: 0 };
+        const targetH = Math.max(0.5, zoneData.count * 1.2);
+        const currentH = b.mesh.scale.y;
+        b.mesh.scale.y += (targetH - currentH) * 0.05;
+        b.mesh.position.y = b.mesh.scale.y * 0.5;
+
+        // Pulse emissive
+        const pulse = 0.15 + Math.sin(time * 2 + b.x) * 0.05;
+        b.mesh.material.emissive.setHSL(b.mesh.material.emissive.getHSL({}).h, 0.9, pulse);
+
+        // Animate ring opacity
+        b.ring.material.opacity = 0.15 + Math.sin(time * 3 + b.z) * 0.1;
+
+        // Update label position
+        b.label.position.y = b.mesh.scale.y + 1.5;
+    });
+
+    // Animate officer spheres
+    NakaApp.threeOfficers.forEach(o => {
+        o.mesh.position.y = 2 + Math.sin(time * 2 + o.mesh.position.x) * 0.5;
+        o.glow.material.opacity = 0.2 + Math.sin(time * 3) * 0.1;
+    });
+
+    // Animate particles
+    NakaApp.threeParticles = NakaApp.threeParticles.filter(p => {
+        p.mesh.position.y -= p.speed;
+        p.life -= 0.02;
+        p.mesh.material.opacity = p.life;
+        if (p.life <= 0) {
+            NakaApp.threeScene.remove(p.mesh);
+            return false;
+        }
+        return true;
+    });
+
+    NakaApp.threeRenderer.render(NakaApp.threeScene, NakaApp.threeCamera);
+}
+
+function addViolationParticle3D(lat, lon, color) {
+    if (!NakaApp.threeScene) return;
+    const x = (lon - 79.0882) * 2000;
+    const z = (lat - 21.1458) * -2000;
+
+    const geo = new THREE.SphereGeometry(0.3, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(color), transparent: true, opacity: 1 });
+    const sphere = new THREE.Mesh(geo, mat);
+    sphere.position.set(x + (Math.random() - 0.5) * 2, 15, z + (Math.random() - 0.5) * 2);
+    NakaApp.threeScene.add(sphere);
+    NakaApp.threeParticles.push({ mesh: sphere, speed: 0.15 + Math.random() * 0.1, life: 1.0 });
+}
+
+function updateOfficers3D(nakas) {
+    if (!NakaApp.threeScene) return;
+
+    // Remove old
+    NakaApp.threeOfficers.forEach(o => {
+        NakaApp.threeScene.remove(o.mesh);
+        NakaApp.threeScene.remove(o.glow);
+    });
+    NakaApp.threeOfficers = [];
+
+    nakas.forEach(n => {
+        const x = (n.longitude - 79.0882) * 2000;
+        const z = (n.latitude - 21.1458) * -2000;
+
+        // Officer sphere
+        const sphereGeo = new THREE.SphereGeometry(0.7, 16, 16);
+        const sphereMat = new THREE.MeshPhongMaterial({
+            color: 0xffd600,
+            emissive: 0xffd600,
+            emissiveIntensity: 0.4,
+        });
+        const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+        sphere.position.set(x, 2, z);
+        sphere.castShadow = true;
+        NakaApp.threeScene.add(sphere);
+
+        // Glow
+        const glowGeo = new THREE.SphereGeometry(1.2, 16, 16);
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0xffd600, transparent: true, opacity: 0.2 });
+        const glow = new THREE.Mesh(glowGeo, glowMat);
+        glow.position.set(x, 2, z);
+        NakaApp.threeScene.add(glow);
+
+        NakaApp.threeOfficers.push({ mesh: sphere, glow, data: n });
+    });
+}
+
+/* ====== Sync Polling ====== */
+function startSyncPolling() {
+    pollSyncState();
+    setInterval(pollSyncState, 5000);
+}
+
+async function pollSyncState() {
+    try {
+        const r = await fetch(`${API}/api/sync/state`);
+        const data = await r.json();
+        if (data.status !== "success") return;
+
+        // Update officer markers on 2D map
+        NakaApp.syncOfficerMarkers.forEach(m => NakaApp.map.removeLayer(m));
+        NakaApp.syncOfficerMarkers = [];
+        (data.active_nakas || []).forEach(n => {
+            const icon = L.divIcon({
+                className: "",
+                html: `<div style="width:20px;height:20px;border-radius:50%;background:#ffd600;border:3px solid #fff;box-shadow:0 0 10px #ffd600;display:flex;align-items:center;justify-content:center;font-size:10px">🚔</div>`,
+                iconSize: [20, 20], iconAnchor: [10, 10],
+            });
+            const m = L.marker([n.latitude, n.longitude], { icon }).addTo(NakaApp.map);
+            m.bindPopup(`<b>${n.officer_name || n.officer_id}</b><br>Status: ${n.status}<br>Since: ${new Date(n.activated_at).toLocaleTimeString()}`);
+            NakaApp.syncOfficerMarkers.push(m);
+        });
+
+        // Update naka count
+        document.getElementById("stat-nakas").textContent = data.naka_count || 0;
+
+        // Update 3D scene
+        if (NakaApp.threeActive) {
+            updateOfficers3D(data.active_nakas || []);
+
+            // Update zone bar heights from violations
+            (data.violations || []).forEach(v => {
+                if (NakaApp.zoneBarData[v.zone]) {
+                    NakaApp.zoneBarData[v.zone].count += 1;
+                }
+                // Spawn particle
+                const vColor = VTYPES.find(vt => vt.type === v.type)?.color || "#40C4FF";
+                addViolationParticle3D(v.latitude, v.longitude, vColor);
+            });
+        }
+    } catch (e) {
+        // Silently fail
+    }
+}

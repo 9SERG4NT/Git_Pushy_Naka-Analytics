@@ -152,15 +152,21 @@ class NakaRecommender:
             proba = self.predict_violation_probability(candidate)
             max_prob = float(np.max(proba))
 
-            dominant_idx = np.argmax(proba)
+            # Get the violation type, but SKIP "No_Violation" — use next best
             if hasattr(self.predictor, "classes_"):
-                violation_type = self.predictor.classes_[dominant_idx]
+                classes = list(self.predictor.classes_)
             else:
-                violation_type = (
-                    config.VIOLATION_TYPES[dominant_idx]
-                    if dominant_idx < len(config.VIOLATION_TYPES)
-                    else "Speeding"
-                )
+                classes = config.VIOLATION_TYPES
+
+            # Sort indices by probability descending and pick first real violation
+            sorted_indices = np.argsort(proba)[::-1]
+            violation_type = "Speeding"  # fallback
+            dominant_idx = sorted_indices[0]
+            for idx in sorted_indices:
+                if idx < len(classes) and classes[idx] != "No_Violation":
+                    violation_type = classes[idx]
+                    dominant_idx = idx
+                    break
 
             # Time relevance: how well does this candidate's time window match current hour?
             mid_hour = (candidate["hour_start"] + candidate["hour_end"]) // 2

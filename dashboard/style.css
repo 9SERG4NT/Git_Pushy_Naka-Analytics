@@ -447,7 +447,7 @@ body {
 
 .model-info-row {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0.6rem;
     margin-bottom: 1rem;
 }
@@ -481,6 +481,7 @@ body {
     margin-bottom: 1rem;
 }
 .model-params-card { min-width: 0; }
+.model-params-card.wide { grid-column: span 2; }
 .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
 .param-item {
     display: flex; justify-content: space-between; align-items: center;
@@ -499,6 +500,39 @@ body {
     border: 1px solid rgba(99,102,241,0.2);
     border-radius: 6px;
     font-size: 0.72rem; font-weight: 600; color: var(--accent2);
+}
+
+/* Evaluation Results Grid */
+.eval-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.6rem;
+}
+.eval-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.8rem 0.6rem;
+    text-align: center;
+    transition: all 0.3s;
+}
+.eval-item:hover { border-color: var(--border-glow); transform: translateY(-2px); }
+.eval-val {
+    font-size: 1.4rem;
+    font-weight: 900;
+    display: block;
+    margin-bottom: 0.2rem;
+    background: linear-gradient(135deg, var(--accent), var(--success));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.eval-label {
+    font-size: 0.6rem;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
 }
 
 .model-chart-grid {
@@ -583,4 +617,55 @@ body {
     .eda-chart-grid { grid-template-columns: 1fr; }
     .eda-chart-card.wide { grid-column: span 1; }
     .model-params-row { grid-template-columns: 1fr; }
+}
+
+/* ====== Three.js 3D View ====== */
+#three-container {
+    background: #0b0f1a;
+    border-radius: 0 0 16px 16px;
+    overflow: hidden;
+}
+#three-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+.three-overlay-info {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(17, 24, 39, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    padding: 8px 16px;
+    border-radius: 24px;
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 600;
+}
+.map-btn.active-btn {
+    background: rgba(99, 102, 241, 0.25) !important;
+    color: #818cf8 !important;
+    border-color: rgba(99, 102, 241, 0.4) !important;
+}
+/* Officer Activity Panel on dashboard */
+.officer-activity-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: #94a3b8;
+}
+.officer-activity-row .badge-id {
+    color: #ffd600;
+    font-weight: 700;
+}
+.officer-activity-row .action {
+    color: #e2e8f0;
 }

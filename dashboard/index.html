@@ -13,6 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚔</text></svg>">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
     <div class="app">
@@ -135,12 +136,21 @@
                             <button class="map-btn" onclick="NakaApp.centerMap()">
                                 <i class="fas fa-crosshairs"></i> Reset View
                             </button>
+                            <button class="map-btn" onclick="NakaApp.toggle3DView()" id="btn-3d">
+                                <i class="fas fa-cube"></i> 3D View
+                            </button>
                         </div>
                     </div>
                     <div id="map"></div>
                     <div class="map-coord-overlay">
                         <i class="fas fa-location-arrow"></i>
                         <span id="map-center">21.1458° N, 79.0882° E</span>
+                    </div>
+                    <div id="three-container" style="display:none;position:absolute;top:46px;left:0;right:0;bottom:0;z-index:500;">
+                        <canvas id="three-canvas"></canvas>
+                        <div class="three-overlay-info" id="three-info">
+                            <span class="pulse-dot-sm green"></span> 3D City View — Violation Density
+                        </div>
                     </div>
                 </div>
 
@@ -279,13 +289,7 @@
                             <span class="model-info-val" id="model-n-clusters">—</span>
                         </div>
                     </div>
-                    <div class="model-info-card">
-                        <div class="model-icon red"><i class="fas fa-calendar-check"></i></div>
-                        <div class="model-info-text">
-                            <span class="model-info-label">Trained At</span>
-                            <span class="model-info-val" id="model-trained-at">—</span>
-                        </div>
-                    </div>
+
                 </div>
 
                 <!-- XGBoost Params -->
@@ -302,6 +306,39 @@
                     <div class="glass-card model-params-card">
                         <div class="chart-title"><i class="fas fa-tags"></i> Predicted Classes</div>
                         <div class="classes-list" id="model-classes-list"></div>
+                    </div>
+                </div>
+
+                <!-- Evaluation Results -->
+                <div class="model-params-row">
+                    <div class="glass-card model-params-card wide">
+                        <div class="chart-title"><i class="fas fa-flask"></i> Evaluation Results</div>
+                        <div class="eval-grid" id="eval-results">
+                            <div class="eval-item">
+                                <span class="eval-val" id="eval-accuracy">—</span>
+                                <span class="eval-label">Accuracy</span>
+                            </div>
+                            <div class="eval-item">
+                                <span class="eval-val" id="eval-precision">—</span>
+                                <span class="eval-label">Precision@5</span>
+                            </div>
+                            <div class="eval-item">
+                                <span class="eval-val" id="eval-recall">—</span>
+                                <span class="eval-label">Recall@5</span>
+                            </div>
+                            <div class="eval-item">
+                                <span class="eval-val" id="eval-f1">—</span>
+                                <span class="eval-label">F1-Score</span>
+                            </div>
+                            <div class="eval-item">
+                                <span class="eval-val" id="eval-hitrate">—</span>
+                                <span class="eval-label">Hit Rate</span>
+                            </div>
+                            <div class="eval-item">
+                                <span class="eval-val" id="eval-uplift">—</span>
+                                <span class="eval-label">Uplift</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

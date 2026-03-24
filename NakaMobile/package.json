@@ -1,31 +1,30 @@
 {
   "name": "nakamobile",
   "version": "1.0.0",
-  "main": "expo/AppEntry.js",
+  "main": "expo/AppEntry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "ios": "expo start --ios"
   },
   "dependencies": {
-    "expo": "~54.0.6",
-    "expo-status-bar": "~2.0.1",
-    "expo-location": "~18.0.6",
-    "expo-haptics": "~14.0.1",
-    "react": "18.3.1",
-    "react-native": "0.76.9",
-    "@react-navigation/native": "^7.0.16",
-    "@react-navigation/bottom-tabs": "^7.2.0",
-    "@react-navigation/native-stack": "^7.3.14",
-    "react-native-screens": "~4.10.0",
-    "react-native-safe-area-context": "5.3.0",
-    "react-native-maps": "1.18.0",
-    "axios": "^1.7.2",
-    "zustand": "^5.0.3"
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/bottom-tabs": "^7.0.0",
+    "@react-navigation/native": "^7.0.0",
+    "axios": "^1.7.0",
+    "expo": "~55.0.0",
+    "expo-haptics": "~55.0.9",
+    "expo-location": "~55.1.4",
+    "expo-status-bar": "~55.0.4",
+    "react": "19.2.0",
+    "react-native": "0.83.2",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-screens": "~4.23.0",
+    "react-native-webview": "13.16.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.0"
+    "@babel/core": "^7.25.0"
   },
   "private": true
 }

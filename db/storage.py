@@ -1,5 +1,6 @@
 import sqlite3
 import json
+import hashlib
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -70,6 +71,30 @@ class Storage:
                 status TEXT NOT NULL,
                 activated_at TEXT NOT NULL,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS officers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                badge_id TEXT UNIQUE NOT NULL,
+                name TEXT NOT NULL,
+                rank TEXT DEFAULT 'Constable',
+                pin_hash TEXT NOT NULL,
+                is_active INTEGER DEFAULT 1,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS officer_activity_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                officer_id TEXT NOT NULL,
+                action TEXT NOT NULL,
+                latitude REAL,
+                longitude REAL,
+                details TEXT,
+                timestamp TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
@@ -308,6 +333,74 @@ class Storage:
         conn.close()
 
         return naka
+
+    # ---- Officer Auth Methods ----
+
+    @staticmethod
+    def _hash_pin(pin: str) -> str:
+        return hashlib.sha256(pin.encode()).hexdigest()
+
+    def register_officer(self, badge_id: str, name: str, pin: str, rank: str = "Constable") -> Optional[int]:
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO officers (badge_id, name, rank, pin_hash) VALUES (?, ?, ?, ?)",
+                (badge_id, name, rank, self._hash_pin(pin)),
+            )
+            officer_id = cursor.lastrowid
+            conn.commit()
+            return officer_id
+        except sqlite3.IntegrityError:
+            return None
+        finally:
+            conn.close()
+
+    def authenticate_officer(self, badge_id: str, pin: str) -> Optional[Dict]:
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM officers WHERE badge_id = ? AND pin_hash = ? AND is_active = 1",
+            (badge_id, self._hash_pin(pin)),
+        )
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            d = dict(row)
+            d.pop("pin_hash", None)
+            return d
+        return None
+
+    def get_all_officers(self) -> List[Dict]:
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, badge_id, name, rank, is_active, created_at FROM officers ORDER BY created_at DESC")
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def log_activity(self, officer_id: str, action: str, latitude: float = None, longitude: float = None, details: str = None) -> int:
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO officer_activity_log (officer_id, action, latitude, longitude, details, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
+            (officer_id, action, latitude, longitude, details, datetime.now().isoformat()),
+        )
+        log_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        return log_id
+
+    def get_recent_activity(self, limit: int = 50) -> List[Dict]:
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM officer_activity_log ORDER BY timestamp DESC LIMIT ?", (limit,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
 
 
 def main():
