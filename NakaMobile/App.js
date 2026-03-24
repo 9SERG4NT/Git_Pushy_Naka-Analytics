@@ -2,93 +2,85 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text, View, StyleSheet } from 'react-native';
-import { useAuthStore } from './src/store';
-import LoginScreen from './src/screens/LoginScreen';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { COLORS, PulsingDot } from './src/components';
 import MapScreen from './src/screens/MapScreen';
-import AlertsScreen from './src/screens/AlertsScreen';
+import IncidentsScreen from './src/screens/IncidentsScreen';
+import BlockadesScreen from './src/screens/BlockadesScreen';
 import StatsScreen from './src/screens/StatsScreen';
-
-const COLORS = {
-  primary: '#1A237E',
-  accent: '#FFD600',
-  background: '#121212',
-  surface: '#1E1E1E',
-  text: '#FFFFFF',
-  textSecondary: '#B0B0B0',
-};
+import ReportScreen from './src/screens/ReportScreen';
+import { useIncidentStore, useConnectionStore } from './src/store';
 
 const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
 
-const TabIcon = ({ icon, label, focused }) => (
+const TAB_ITEMS = [
+  { name: 'Map', component: MapScreen, icon: '🗺️', label: 'Live Map' },
+  { name: 'Incidents', component: IncidentsScreen, icon: '🚨', label: 'Incidents' },
+  { name: 'Blockades', component: BlockadesScreen, icon: '🚧', label: 'Blockades' },
+  { name: 'Stats', component: StatsScreen, icon: '📊', label: 'Stats' },
+  { name: 'Report', component: ReportScreen, icon: '📋', label: 'Report' },
+];
+
+const TabIcon = ({ icon, label, focused, badge }) => (
   <View style={styles.tabIconContainer}>
-    <Text style={[styles.tabIcon, focused && styles.tabIconFocused]}>{icon}</Text>
+    <View>
+      <Text style={[styles.tabIcon, focused && styles.tabIconFocused]}>{icon}</Text>
+      {badge > 0 && (
+        <View style={styles.tabBadge}>
+          <Text style={styles.tabBadgeText}>{badge > 99 ? '99+' : badge}</Text>
+        </View>
+      )}
+    </View>
     <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>{label}</Text>
   </View>
 );
 
-const MainTabs = () => (
-  <Tab.Navigator
-    screenOptions={{
-      headerShown: false,
-      tabBarStyle: styles.tabBar,
-      tabBarShowLabel: false,
-    }}
-  >
-    <Tab.Screen
-      name="Map"
-      component={MapScreen}
-      options={{
-        tabBarIcon: ({ focused }) => (
-          <TabIcon icon="🗺️" label="Map" focused={focused} />
-        ),
-      }}
-    />
-    <Tab.Screen
-      name="Alerts"
-      component={AlertsScreen}
-      options={{
-        tabBarIcon: ({ focused }) => (
-          <TabIcon icon="🔔" label="Alerts" focused={focused} />
-        ),
-      }}
-    />
-    <Tab.Screen
-      name="Stats"
-      component={StatsScreen}
-      options={{
-        tabBarIcon: ({ focused }) => (
-          <TabIcon icon="📊" label="Stats" focused={focused} />
-        ),
-      }}
-    />
-  </Tab.Navigator>
-);
-
 export default function App() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const unreadCount = useIncidentStore((s) => s.unreadCount);
 
   return (
-    <NavigationContainer>
-      <StatusBar style="light" />
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <Stack.Screen name="Main" component={MainTabs} />
-        ) : (
-          <Stack.Screen name="Login" component={LoginScreen} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Tab.Navigator
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: styles.tabBar,
+            tabBarShowLabel: false,
+            tabBarActiveTintColor: COLORS.accent,
+            tabBarInactiveTintColor: COLORS.textSecondary,
+          }}
+        >
+          {TAB_ITEMS.map((item) => (
+            <Tab.Screen
+              key={item.name}
+              name={item.name}
+              component={item.component}
+              options={{
+                tabBarIcon: ({ focused }) => (
+                  <TabIcon
+                    icon={item.icon}
+                    label={item.label}
+                    focused={focused}
+                    badge={item.name === 'Incidents' ? unreadCount : 0}
+                  />
+                ),
+              }}
+            />
+          ))}
+        </Tab.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: COLORS.surface,
-    borderTopWidth: 0,
-    height: 70,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    height: 72,
     paddingBottom: 8,
     paddingTop: 8,
   },
@@ -97,18 +89,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabIcon: {
-    fontSize: 24,
-    opacity: 0.6,
+    fontSize: 22,
+    opacity: 0.5,
   },
   tabIconFocused: {
     opacity: 1,
   },
   tabLabel: {
-    fontSize: 10,
+    fontSize: 9,
     color: COLORS.textSecondary,
-    marginTop: 2,
+    marginTop: 3,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   tabLabelFocused: {
     color: COLORS.accent,
+  },
+  tabBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    backgroundColor: COLORS.dangerLight,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  tabBadgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: 'bold',
   },
 });

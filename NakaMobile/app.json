@@ -3,10 +3,10 @@
     "name": "NakaMobile",
     "slug": "nakamobile",
     "version": "1.0.0",
+    "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -15,7 +15,11 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nakaanalytics.nakamobile"
+      "bundleIdentifier": "com.nakaanalytics.nakamobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Allow NakaMobile to use your location for naka deployment.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow NakaMobile to use your location for naka deployment."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +29,9 @@
       "package": "com.nakaanalytics.nakamobile",
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "VIBRATE"
       ]
     },
     "web": {
@@ -35,7 +41,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow NakaMobile to use your location for deployment tracking."
+          "locationAlwaysAndWhenInUsePermission": "Allow NakaMobile to use your location for naka deployment tracking."
         }
       ]
     ]
