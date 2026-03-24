@@ -1,16 +1,18 @@
-# 🚓 NakaAnalytics
-### End-to-End Predictive Deployment System for Traffic Police Optimization
+# 🚓 NakaAnalytics — OPS_COMMAND
+### AI-Powered Tactical Deployment System for Traffic Police Optimization
 
 <div align="center">
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104%2B-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0%2B-FF6600?logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io/)
-[![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.3%2B-F7931E?logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
-[![Redis](https://img.shields.io/badge/Redis-5.0%2B-DC382D?logo=redis&logoColor=white)](https://redis.io/)
+[![React Native](https://img.shields.io/badge/React_Native-Expo_55-61DAFB?logo=react&logoColor=white)](https://reactnative.dev/)
+[![Leaflet](https://img.shields.io/badge/Leaflet-1.9.4-199900?logo=leaflet&logoColor=white)](https://leafletjs.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-*An intelligent ML-powered system that recommends optimal naka (police checkpoint) placements to maximize traffic violation detection — in real time.*
+*A full-stack, ML-powered platform connecting a real-time 3D Command Dashboard with a Tactical Mobile App for field officers — enabling predictive, data-driven naka (checkpoint) deployments.*
+
+**[📹 Watch the Demo Video →](https://drive.google.com/drive/folders/1i3i1kGgx0fd53cQh_dY74aPyzOvAlGV9?usp=sharing)**
 
 </div>
 
@@ -19,31 +21,53 @@
 ## 📖 Table of Contents
 
 - [Overview](#-overview)
+- [Demo](#-demo)
 - [Key Features](#-key-features)
 - [System Architecture](#-system-architecture)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Running the System](#running-the-system)
-- [Usage](#-usage)
-  - [Training the Model](#training-the-model)
+  - [Backend Setup](#1-backend-setup)
+  - [Mobile App Setup](#2-mobile-app-setup)
+- [Platform Components](#-platform-components)
+  - [Web Dashboard (Command Center)](#web-dashboard--command-center)
+  - [Mobile App (Field Terminal)](#mobile-app--field-terminal)
   - [API Endpoints](#api-endpoints)
-  - [Real-Time Dashboard](#real-time-dashboard)
-- [Configuration](#-configuration)
 - [ML Pipeline](#-ml-pipeline)
+- [Real-Time Sync Architecture](#-real-time-sync-architecture)
+- [Configuration](#-configuration)
 - [Violation Types](#-violation-types)
-- [Testing](#-testing)
-- [Contributing](#-contributing)
+- [Future Roadmap](#-future-roadmap)
+- [License](#-license)
 
 ---
 
 ## 🌟 Overview
 
-**NakaAnalytics** is an end-to-end machine learning system built to help traffic police departments make smarter, data-driven decisions about where and when to deploy naka checkpoints. By analyzing historical violation patterns, geographic hotspots, time-of-day trends, and weather conditions, the system produces real-time recommendations that maximize the probability of detecting violations.
+**NakaAnalytics (OPS_COMMAND)** is an end-to-end ML-powered tactical deployment system designed for traffic police departments. Instead of relying on gut instinct or static rotations, the platform uses **spatial clustering** and **predictive modeling** to identify violation hotspots and recommend optimal checkpoint placements in real time.
 
-The system is currently calibrated for **Nagpur, Maharashtra, India**, with zone-specific violation patterns (e.g., DUI near bar zones, helmet violations near colleges), but the architecture is fully generalizable to any city.
+The platform comprises three synchronized layers:
+
+| Layer | Purpose | Used By |
+|-------|---------|---------|
+| **FastAPI Backend** | AI engine, database, REST + WebSocket API | Both |
+| **Web Dashboard** | 3D command visualization, live monitoring | Superadmin / Control Room |
+| **React Native Mobile App** | Field deployment, GPS tracking, live map | Individual Officers |
+
+Currently calibrated for **Nagpur, Maharashtra, India**, but the architecture is fully generalizable to any city.
+
+---
+
+## 📹 Demo
+
+**🎥 [Click here to watch the full platform demo](https://drive.google.com/drive/folders/1i3i1kGgx0fd53cQh_dY74aPyzOvAlGV9?usp=sharing)**
+
+The demo showcases:
+- Real-time violation simulation on the 3D web dashboard
+- Officer login and checkpoint deployment via the mobile app
+- Bi-directional sync between web and mobile platforms
+- ML-driven hotspot predictions and recommendations
+- Heatmap, live feed, and analytics panels
 
 ---
 
@@ -51,80 +75,108 @@ The system is currently calibrated for **Nagpur, Maharashtra, India**, with zone
 
 | Feature | Description |
 |---------|-------------|
-| 🤖 **ML-Powered Predictions** | XGBoost classifier trained on 50,000+ synthetic violation records across 7 violation categories |
-| 📍 **Spatial Clustering** | DBSCAN hotspot discovery + KMeans grid-based zone clustering for intelligent deployment zones |
-| 🔄 **Auto-Retraining** | APScheduler triggers automated retraining every 6 hours with concept drift detection |
-| 📡 **Real-Time Dashboard** | Live violation feed, interactive Leaflet map, heatmap, and Chart.js analytics via WebSocket |
-| 🌊 **Drift Detection** | PSI (Population Stability Index) and KL Divergence monitoring to catch model decay early |
-| 🚀 **REST + WebSocket API** | FastAPI backend serving recommendations, model status, and streaming violation events |
-| 🎨 **Premium UI** | Dark mode glassmorphism dashboard with cluster-density-based naka redeployment visualization |
-| 📊 **EDA Suite** | Full exploratory data analysis with Matplotlib, Seaborn, and Plotly visualizations |
+| 🤖 **ML-Powered Predictions** | XGBoost classifier trained on 50,000+ synthetic violation records across 7 categories |
+| 📍 **Spatial Clustering** | DBSCAN hotspot discovery + KMeans grid-based zone clustering for intelligent deployment |
+| 🌐 **Real-Time 3D Dashboard** | Interactive Leaflet map with heatmap, live feed, and Chart.js analytics via WebSocket |
+| 📱 **Tactical Mobile App** | React Native (Expo) field terminal with officer auth, live map, alerts, and GPS deploy |
+| 🔄 **Live Sync** | Web dashboard and mobile app sync in real-time via REST polling + WebSocket |
+| 🔥 **Violation Heatmaps** | Dynamic density visualization updated every 8 seconds |
+| 🛡️ **Officer Authentication** | Badge ID + password login with session persistence via AsyncStorage |
+| 📊 **Analytics Suite** | Violation type distribution, time trends, top deployment rankings, officer stats |
+| 🌊 **Drift Detection** | PSI + KL Divergence monitoring to catch model decay and trigger retraining |
+| 🎨 **OPS_COMMAND UI** | High-contrast tech-noir aesthetic with dark surfaces, orange primary, yellow accents |
 
 ---
 
 ## 🏗️ System Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                     NakaAnalytics System                     │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌─────────────────┐   ┌─────────────────┐   ┌───────────┐  │
-│  │   Dashboard     │   │   FastAPI       │   │ Scheduler │  │
-│  │  (Leaflet/WS)   │◄─►│   REST API      │◄─►│(6h Retrain│  │
-│  └────────┬────────┘   └────────┬────────┘   └───────────┘  │
-│           │                     │                            │
-│      ┌────▼──────────────────────▼────┐                      │
-│      │           Engine Layer         │                      │
-│      │  Recommender │ Drift Detector  │                      │
-│      │  Predictor   │ Eval Metrics    │                      │
-│      └────┬──────────────────────┬────┘                      │
-│           │                      │                           │
-│      ┌────▼──────────────────────▼────┐                      │
-│      │          Pipeline Layer        │                      │
-│      │  Feature Eng. │ Train │ Infer  │                      │
-│      └────┬──────────────────────┬────┘                      │
-│           │                      │                           │
-│      ┌────▼──────────────────────▼────┐                      │
-│      │            Data Layer          │                      │
-│      │  Synthetic Generator │ SQLite  │                      │
-│      │  Redis Pub/Sub       │ Cache   │                      │
-│      └────────────────────────────────┘                      │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                     NakaAnalytics — OPS_COMMAND                   │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────────┐        ┌─────────────────┐                  │
+│  │  📱 Mobile App  │        │  🖥️ Web Dashboard │                 │
+│  │  (React Native) │        │  (Leaflet + 3D)  │                 │
+│  │  Expo SDK 55    │        │  WebSocket Client │                │
+│  └────────┬────────┘        └────────┬─────────┘                 │
+│           │ REST Poll (8s)           │ WebSocket (Live)           │
+│           │                          │                            │
+│      ┌────▼──────────────────────────▼────┐                      │
+│      │         FastAPI Backend            │                      │
+│      │  /api/sync/state  │  /ws           │                      │
+│      │  /api/naka/update │  /api/auth     │                      │
+│      └────────────┬───────────────────────┘                      │
+│                   │                                              │
+│      ┌────────────▼───────────────────────┐                      │
+│      │        AI / ML Engine              │                      │
+│      │  XGBoost Predictor │ K-Means       │                      │
+│      │  DBSCAN Clusterer  │ Recommender   │                      │
+│      └────────────┬───────────────────────┘                      │
+│                   │                                              │
+│      ┌────────────▼───────────────────────┐                      │
+│      │         Data Layer                 │                      │
+│      │  SQLite DB    │ Synthetic Generator │                     │
+│      │  Feature Eng. │ Drift Detector      │                     │
+│      └────────────────────────────────────┘                      │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-### Data Flow
+### Data Flows
 
 **Training Flow:**
 ```
-Synthetic Data → Feature Engineering → Clustering (DBSCAN + KMeans) → XGBoost Training → Save Models
+Synthetic Data → Feature Engineering → DBSCAN + KMeans Clustering → XGBoost Training → Saved Models
 ```
 
-**Inference Flow:**
+**Real-Time Sync Loop:**
 ```
-API Request → Load Models → Generate Zone Candidates → Predict Probabilities → Rank & Recommend
+Violation Event → SQLite Storage → /api/sync/state → Web Dashboard (WebSocket)
+                                                    → Mobile App (REST Poll every 8s)
 ```
 
-**Real-Time Flow:**
+**Officer Deployment Flow:**
 ```
-Violation Event → API Ingest → SQLite Storage → Redis Pub/Sub → WebSocket → Dashboard
+Officer GPS → Mobile "DEPLOY" → POST /api/naka/update → SQLite → WebSocket → Dashboard shows 🚔
 ```
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **API Framework** | FastAPI | REST endpoints + WebSocket server |
-| **ML Models** | XGBoost, Scikit-learn | Violation probability classification |
-| **Clustering** | DBSCAN, KMeans, HDBSCAN | Hotspot discovery & zone segmentation |
-| **Storage** | SQLite | Violations, recommendations, metadata |
-| **Message Queue** | Redis | Pub/Sub streaming for real-time events |
-| **Scheduling** | APScheduler | Automated retraining + drift checks |
-| **Dashboard** | Leaflet.js, Chart.js | Interactive maps & analytics charts |
-| **Visualization** | Matplotlib, Seaborn, Plotly | EDA and reporting |
-| **Serialization** | Joblib, Pydantic | Model persistence & data validation |
+### Backend
+| Technology | Purpose |
+|-----------|---------|
+| **Python 3.10+** | Core programming language |
+| **FastAPI** | Async REST API + WebSocket server |
+| **SQLite** | Lightweight database for violations, officers, nakas |
+| **Uvicorn** | ASGI server for production deployment |
+
+### Machine Learning
+| Technology | Purpose |
+|-----------|---------|
+| **XGBoost** | Multi-class violation probability classifier |
+| **Scikit-learn** | K-Means clustering, preprocessing, evaluation |
+| **DBSCAN** | Density-based hotspot discovery |
+| **Joblib** | Model serialization and persistence |
+
+### Web Dashboard
+| Technology | Purpose |
+|-----------|---------|
+| **Vanilla JavaScript** | Lightweight, 60 FPS map rendering |
+| **Leaflet.js** | Interactive map with dark CartoDB tiles |
+| **Leaflet.heat** | Dynamic violation heatmap overlay |
+| **Chart.js** | Analytics charts and trend visualizations |
+
+### Mobile App
+| Technology | Purpose |
+|-----------|---------|
+| **React Native** | Cross-platform mobile framework |
+| **Expo SDK 55** | Managed workflow, camera, GPS, OTA updates |
+| **React Navigation v7** | Tab-based navigation with custom dark theme |
+| **react-native-webview** | Leaflet map embedded in native app |
+| **AsyncStorage** | Offline session persistence |
+| **expo-location** | GPS coordinates for checkpoint deployment |
 
 ---
 
@@ -132,14 +184,14 @@ Violation Event → API Ingest → SQLite Storage → Redis Pub/Sub → WebSocke
 
 ```
 NakaAnalytics/
-├── main.py                  # FastAPI app entrypoint
-├── config.py                # Global configuration & hyperparameters
-├── requirements.txt         # Python dependencies
+├── main.py                     # FastAPI app entrypoint
+├── config.py                   # Global configuration & hyperparameters
+├── requirements.txt            # Python dependencies
 │
 ├── api/
-│   ├── routes.py            # REST API route definitions
-│   ├── websocket.py         # WebSocket endpoint (real-time feed)
-│   └── streaming.py         # Redis streaming integration
+│   ├── routes.py               # 16+ REST API endpoints
+│   ├── websocket.py            # WebSocket endpoint for live dashboard
+│   └── streaming.py            # Event streaming integration
 │
 ├── data/
 │   ├── synthetic_generator.py  # Generates 50K+ realistic violation records
@@ -149,204 +201,156 @@ NakaAnalytics/
 │   └── feature_engineering.py  # Cyclical encoding, grid cells, time buckets
 │
 ├── models/
-│   ├── predictor.py         # ViolationPredictor (XGBoost wrapper)
-│   ├── clustering.py        # SpatialClusterer (DBSCAN + KMeans)
-│   └── saved/               # Serialized models (.json, .joblib)
+│   ├── predictor.py            # ViolationPredictor (XGBoost wrapper)
+│   ├── clustering.py           # SpatialClusterer (DBSCAN + KMeans)
+│   └── saved/                  # Serialized models (.json, .joblib)
 │
 ├── pipeline/
-│   ├── train_pipeline.py    # End-to-end training orchestration
-│   ├── inference_pipeline.py # Load models & run predictions
-│   └── drift_detector.py    # PSI + KL divergence drift monitoring
+│   ├── train_pipeline.py       # End-to-end training orchestration
+│   ├── inference_pipeline.py   # Load models & run predictions
+│   └── drift_detector.py       # PSI + KL divergence drift monitoring
 │
 ├── engine/
-│   └── recommender.py       # Ranks & assigns naka deployment recommendations
-│
-├── scheduler/
-│   └── retrain_scheduler.py # APScheduler job with drift-triggered retraining
+│   └── recommender.py          # Ranks & assigns naka recommendations
 │
 ├── evaluation/
-│   └── metrics.py           # Precision@K, Recall@K, Uplift, Hit Rate
-│
-├── eda/
-│   ├── eda_analysis.py      # Exploratory data analysis scripts
-│   └── output/              # Generated charts and reports
+│   └── metrics.py              # Precision@K, Recall@K, Hit Rate
 │
 ├── db/
-│   └── naka_analytics.db    # SQLite database (auto-created)
+│   ├── storage.py              # SQLite ORM for officers, nakas, violations
+│   └── naka_analytics.db       # SQLite database (auto-created)
 │
 ├── dashboard/
-│   ├── index.html           # Dashboard UI
-│   ├── app.js               # WebSocket client + Leaflet + Chart.js logic
-│   └── style.css            # Glassmorphism dark-mode styling
+│   ├── index.html              # 3D Command Dashboard UI
+│   ├── app.js                  # WebSocket + Leaflet + Chart.js logic
+│   └── style.css               # OPS_COMMAND dark-mode styling
 │
-├── tests/
-│   └── ...                  # Pytest test suite
-│
-└── docs/
-    └── architecture.md      # Detailed architecture documentation
+└── NakaMobile/                 # React Native Mobile App
+    ├── App.js                  # Navigation + theme entry point
+    ├── app.json                # Expo configuration
+    ├── package.json            # Node.js dependencies
+    └── src/
+        ├── constants/
+        │   └── theme.js        # OPS_COMMAND design system + API_BASE_URL
+        ├── context/
+        │   └── AuthContext.js   # Authentication state management
+        ├── services/
+        │   └── api.js          # REST API communication layer
+        └── screens/
+            ├── LoginScreen.js  # Officer badge + password login
+            ├── MapScreen.js    # Deployment overview (hero card + checkpoints)
+            ├── AlertsScreen.js # Priority-coded incident alerts
+            ├── LiveMapScreen.js# Full-screen Leaflet map + live feed
+            └── StatsScreen.js  # Officer analytics & performance
 ```
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-
-- **Python 3.10+**
-- **Redis** (for real-time streaming)
-  - Windows: [Download Redis for Windows](https://github.com/tporadowski/redis/releases)
-  - Or use Docker: `docker run -d -p 6379:6379 redis`
-- `pip` or a virtual environment manager (e.g., `venv`, `conda`)
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/NakaAnalytics.git
-   cd NakaAnalytics
-   ```
-
-2. **Create and activate a virtual environment:**
-   ```bash
-   python -m venv .venv
-
-   # Windows
-   .venv\Scripts\activate
-
-   # macOS / Linux
-   source .venv/bin/activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Start Redis** (in a separate terminal or as a service):
-   ```bash
-   redis-server
-   ```
-
-### Running the System
-
-#### Step 1 — Train the ML Models
-
-Run the full training pipeline to generate synthetic data, fit clustering, and train XGBoost:
+### 1. Backend Setup
 
 ```bash
+# Clone the repository
+git clone https://github.com/9SERG4NT/Git_Pushy_Naka-Analytics.git
+cd Git_Pushy_Naka-Analytics
+
+# Create virtual environment
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # macOS/Linux
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Train the ML models
 python pipeline/train_pipeline.py
+
+# Start the backend server
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Expected output:
-```
-============================================================
-NAKA ANALYTICS TRAINING PIPELINE
-============================================================
-[1/5] Generating training data...
-[2/5] Engineering features...
-[3/5] Training clustering model...
-[4/5] Training prediction model...
-[5/5] Saving metadata...
-TRAINING COMPLETE
-```
+Once running, access:
+- **Dashboard:** http://localhost:8000/dashboard
+- **API Docs:** http://localhost:8000/docs (Swagger UI)
+- **Health Check:** http://localhost:8000/health
 
-#### Step 2 — Start the API Server
+### 2. Mobile App Setup
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+cd NakaMobile
+
+# Install Node.js dependencies
+npm install
+
+# Update API_BASE_URL in src/constants/theme.js
+# Replace the IP with your machine's WiFi IP address:
+#   API_BASE_URL = 'http://<YOUR_WIFI_IP>:8000'
+# Find your IP: ipconfig (Windows) or ifconfig (macOS/Linux)
+
+# Start Expo development server
+npx expo start --clear
 ```
 
-#### Step 3 — Access the Dashboard
+Scan the QR code with **Expo Go** on your phone (make sure both devices are on the same WiFi network).
 
-Open your browser and navigate to:
-
-```
-http://localhost:8000/dashboard
-```
-
-API documentation (Swagger UI):
-```
-http://localhost:8000/docs
-```
+**Default Login Credentials:**
+- Badge ID: `NP001`
+- Password: `naka123`
 
 ---
 
-## 📡 Usage
+## 🖥️ Platform Components
 
-### Training the Model
+### Web Dashboard — Command Center
 
-```bash
-# Full training pipeline
-python pipeline/train_pipeline.py
+The web dashboard is the superadmin's real-time command center, accessible at `/dashboard`.
 
-# Train only the predictor model
-python models/predictor.py
+| Panel | Function |
+|-------|----------|
+| 🗺️ **Interactive Map** | Dark-tiled Leaflet map with violation markers and naka shields |
+| 🔥 **Heatmap Overlay** | Dynamic violation density visualization |
+| 📋 **Live Feed** | Real-time stream of detected violations with confidence scores |
+| 📊 **Analytics** | Violation type distribution, time trends via Chart.js |
+| 🚔 **Top Deployments** | ML-ranked recommendations updated continuously |
+| 🌡️ **Model Insights** | Training accuracy, drift status, feature importance |
 
-# Run inference on saved models
-python pipeline/inference_pipeline.py
-```
+### Mobile App — Field Terminal
+
+The mobile app is built for individual officers deployed in the field.
+
+| Screen | Purpose |
+|--------|---------|
+| 🔐 **Login** | Badge ID + password authentication with session persistence |
+| 📍 **Deploy** | Hero card for #1 recommended deployment, officer checkpoint chips |
+| 🔔 **Alerts** | Priority-coded alerts (HIGH/MED/LOW) with left accent bars |
+| 🗺️ **Live Map** | Full-screen Leaflet map with auto-polling (8s), heatmap, and live incident feed |
+| 📊 **Stats** | Officer profile, bento stats grid, performance charts |
 
 ### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/` | API info and version |
 | `GET` | `/health` | Health check |
-| `GET` | `/recommendations` | Get top naka deployment recommendations |
-| `GET` | `/model/status` | Model version, training time, and accuracy |
-| `GET` | `/clusters` | Active hotspot clusters and coordinates |
-| `POST` | `/violations/ingest` | Ingest a new violation event |
-| `GET` | `/violations/recent` | Fetch recent violation events |
-| `WS` | `/ws` | WebSocket stream for live dashboard updates |
+| `GET` | `/api/recommendations` | ML-generated deployment recommendations |
+| `GET` | `/api/sync/state` | **Master sync** — violations, nakas, officers, activity |
+| `GET` | `/api/simulate/violations` | Generate simulated real-time violations |
+| `GET` | `/api/naka/active` | List all active checkpoints |
+| `POST` | `/api/naka/update` | Deploy/update a checkpoint (from mobile) |
+| `POST` | `/api/auth/login` | Officer authentication |
+| `POST` | `/api/auth/register` | Officer registration |
+| `GET` | `/api/officers/active` | Active officer list |
+| `GET` | `/api/officers/activity` | Officer activity log |
+| `GET` | `/api/model/status` | Model version and accuracy |
+| `GET` | `/api/model/details` | Detailed model performance metrics |
+| `GET` | `/api/clusters` | Active spatial clusters |
+| `GET` | `/api/eda/summary` | EDA summary statistics |
+| `GET` | `/api/eda/full` | Full exploratory data analysis |
+| `POST` | `/api/ingest` | Ingest a new violation event |
+| `POST` | `/api/retrain` | Trigger model retraining |
+| `WS` | `/ws` | WebSocket for live dashboard updates |
 
-> Full interactive API docs available at **`/docs`** (Swagger UI) or **`/redoc`** (ReDoc).
-
-### Real-Time Dashboard
-
-The dashboard provides:
-
-- 🗺️ **Interactive Leaflet Map** — Live naka positions with cluster-density redeployment logic
-- 🔥 **Heatmap Overlay** — Dynamic violation density across Nagpur zones
-- 📋 **Live Violation Feed** — Real-time stream of detected violations with confidence scores
-- 📊 **Analytics Charts** — Violation type distribution, time-of-day trends, top deployment zones
-- 🚔 **Top Deployments Panel** — Ranked recommendations updated in real-time
-
----
-
-## ⚙️ Configuration
-
-All system parameters are centralized in `config.py`:
-
-```python
-# Data
-SYNTHETIC_DATA_SIZE = 50_000    # Training records to generate
-RANDOM_SEED         = 42
-
-# Clustering
-DBSCAN_EPS          = 0.01      # DBSCAN neighborhood radius
-DBSCAN_MIN_SAMPLES  = 10        # Minimum cluster size
-KMEANS_N_CLUSTERS   = 15        # Number of KMeans zones
-
-# XGBoost
-XGBOOST_PARAMS = {
-    "max_depth":     6,
-    "learning_rate": 0.1,
-    "n_estimators":  100,
-    "objective":     "multi:softprob",
-}
-
-# Retraining & Drift
-RETRAIN_INTERVAL_HOURS = 6      # Hours between scheduled retrains
-DRIFT_THRESHOLD_PSI    = 0.25   # PSI threshold triggering retrain
-DRIFT_THRESHOLD_KL     = 0.10   # KL divergence threshold
-
-# Grid Resolution
-GRID_LAT_SIZE = 0.001           # ~111 meters per lat unit
-GRID_LON_SIZE = 0.001
-
-# Redis
-REDIS_URL = "redis://localhost:6379/0"
-```
+> Full interactive docs at **`/docs`** (Swagger) or **`/redoc`** (ReDoc).
 
 ---
 
@@ -366,46 +370,130 @@ REDIS_URL = "redis://localhost:6379/0"
 | `time_bucket_encoded` | Time period bucket (rush_morning, midday, etc.) |
 | `cluster_kmeans` | Assigned spatial cluster ID |
 
-### Model: ViolationPredictor (XGBoost)
+### XGBoost ViolationPredictor
 
-- **Task**: Multi-class classification across 7 violation types
-- **Input**: 12 engineered features per location-time combination
-- **Output**: Probability distribution over violation types
-- **Evaluation**: 80/20 stratified train-val split
+- **Task:** Multi-class classification across 7 violation types
+- **Input:** 12 engineered features per location-time combination
+- **Output:** Probability distribution over violation types
+- **Evaluation:** 80/20 stratified train-val split
+
+### Spatial Clustering
+
+1. **DBSCAN** discovers dense violation clusters without specifying K
+2. **K-Means** refines these into grid-based deployment zones
+3. The **NakaRecommender** merges spatial clusters with temporal predictions to rank deployment candidates by `expected_violation_yield`
 
 ### Drift Detection
 
-The `DriftDetector` monitors PSI and KL divergence between reference and current feature distributions. When thresholds are exceeded, retraining is triggered automatically without manual intervention.
+The `DriftDetector` monitors PSI (Population Stability Index) and KL Divergence between reference and current feature distributions. When thresholds are exceeded, retraining is triggered automatically.
+
+---
+
+## 🔄 Real-Time Sync Architecture
+
+The platform uses a **dual-channel sync** strategy to keep the web dashboard and mobile app perfectly synchronized:
+
+```
+                    ┌─────────────────────┐
+                    │    SQLite Database   │
+                    │  violations, nakas,  │
+                    │  officers, activity  │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │   FastAPI Backend    │
+                    │   /api/sync/state    │
+                    └───┬─────────────┬───┘
+                        │             │
+           WebSocket    │             │  REST Poll (8s)
+           (instant)    │             │
+                        │             │
+              ┌─────────▼───┐   ┌─────▼──────────┐
+              │ Web Dashboard│   │  Mobile App     │
+              │ (Superadmin) │   │  (Field Officer) │
+              └─────────────┘   └────────────────┘
+```
+
+- **Web Dashboard:** Subscribes to WebSocket `/ws` for instant push updates
+- **Mobile App:** WebView auto-polls `/api/sync/state` every 8 seconds via `fetch()`
+- **Officer Deploy:** `POST /api/naka/update` → instantly visible on both platforms
+
+---
+
+## ⚙️ Configuration
+
+### Backend (`config.py`)
+
+```python
+SYNTHETIC_DATA_SIZE = 50_000    # Training records
+RANDOM_SEED         = 42
+
+# Clustering
+DBSCAN_EPS          = 0.01      # Neighborhood radius
+DBSCAN_MIN_SAMPLES  = 10
+KMEANS_N_CLUSTERS   = 15
+
+# XGBoost
+XGBOOST_PARAMS = {
+    "max_depth": 6, "learning_rate": 0.1,
+    "n_estimators": 100, "objective": "multi:softprob"
+}
+
+# Drift Detection
+DRIFT_THRESHOLD_PSI = 0.25
+DRIFT_THRESHOLD_KL  = 0.10
+```
+
+### Mobile App (`src/constants/theme.js`)
+
+```javascript
+// OPS_COMMAND Design System
+export const COLORS = {
+  primary: '#ff9159',           // Tactical orange
+  secondary: '#fdd400',         // Signal yellow
+  surface: '#0c0e11',           // Deep dark background
+  error: '#ff7351',             // Alert red
+  // ... full palette
+};
+
+// ⚠️ Update this to your machine's WiFi IP
+export const API_BASE_URL = 'http://<YOUR_IP>:8000';
+```
 
 ---
 
 ## 🚦 Violation Types
 
-The system classifies and predicts the following violation types, each with domain-specific zone affinity:
-
 | Violation | Primary Zone | Peak Hours |
-|-----------|-------------|-----------|
-| `DUI` | Bar zones | Late night (20:00–00:00) |
-| `No_Helmet` | College zones | Rush hour (7:00–10:00) |
-| `Speeding` | Highways | Early morning (0:00–7:00) |
-| `Signal_Jump` | Intersections | Rush hours |
-| `Overloading` | Industrial zones | Morning |
-| `Wrong_Way` | Urban areas | Evening |
+|-----------|-------------|------------|
+| `DUI` | Bar zones (Dharampeth) | Late night (20:00–00:00) |
+| `No_Helmet` | College zones | Rush hour (07:00–10:00) |
+| `Speeding` | Highways | Early morning (00:00–07:00) |
+| `Signal_Jump` | Intersections (Civil Lines) | Rush hours |
+| `Overloading` | Industrial zones (Itwari) | Morning |
+| `Wrong_Way` | Urban areas (Sadar) | Evening |
 | `No_Violation` | All zones | — |
+
+---
+
+## 🔮 Future Roadmap
+
+- [ ] **Push Notifications** — Firebase Cloud Messaging to alert idle officers of nearby hotspots
+- [ ] **Route Optimization** — OSRM integration for fastest path from officer GPS to recommended Naka
+- [ ] **Image Upload** — Officers snap violation photos synced to the command dashboard
+- [ ] **PostgreSQL Migration** — Production-grade database for multi-city deployment
+- [ ] **Offline Mode** — Local SQLite cache on mobile for areas with poor connectivity
+- [ ] **Multi-City Support** — Configurable zone definitions for any Indian city
 
 ---
 
 ## 🧪 Testing
 
-Run the full test suite with:
-
 ```bash
+# Run full test suite
 pytest tests/ -v
-```
 
-Run a specific test file:
-
-```bash
+# Run specific module tests
 pytest tests/test_predictor.py -v
 ```
 
@@ -421,11 +509,14 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 - **Nagpur Traffic Police** — Domain inspiration for realistic zone and violation pattern modeling
 - **XGBoost Team** — High-performance gradient boosting implementation
-- **FastAPI** — Modern, fast Python web framework
+- **FastAPI** — Modern async Python web framework
 - **Leaflet.js** — Lightweight, mobile-friendly interactive maps
+- **Expo & React Native** — Cross-platform mobile development framework
 
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for smarter, data-driven traffic law enforcement.</sub>
+  <strong>OPS_COMMAND</strong> — Built for smarter, data-driven traffic law enforcement 🚔
+  <br/>
+  <sub>Full-Stack AI Platform · Web Dashboard · Mobile Field Terminal · Real-Time Sync</sub>
 </div>
